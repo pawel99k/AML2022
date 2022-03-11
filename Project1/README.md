@@ -10,3 +10,7 @@
 - [Bank Marketing](https://archive.ics.uci.edu/ml/datasets/Bank+Marketing) - Data related with bank marketing companies. Target: Did the client subscribe a term deposit? Many observations: 41188, 20 inputs. Imbalanced.
 - [Diabetic retinopathy](https://archive.ics.uci.edu/ml/datasets/Diabetic+Retinopathy+Debrecen+Data+Set) - Data with features extracted from Messidor image sets. Only numeric variables. Matrix 1151x20, quite balanced at a glance.
 - [Horse colic data set](https://archive.ics.uci.edu/ml/datasets/Horse+Colic) - Relatively high ratio of columns vs. rows. Target: predicting a horse colic or sth, idk, I'm not a vet. Different feture types. 30% of missing values.
+
+
+Other potential datasets:
+- [Breast Cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29)- quite popular dataset, 29 features ~500 observations
