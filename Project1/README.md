@@ -13,4 +13,4 @@
 
 
 Other potential datasets:
-- [Breast Cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29)- quite popular dataset, 29 features ~500 observations
+- [Breast Cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29)- quite popular dataset, should be pretty easy to perform experiments on. Target: diagnosis (malignant/ benign)
