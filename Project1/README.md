@@ -13,4 +13,5 @@
 
 
 Other potential datasets:
-- [Breast Cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29)- quite popular dataset, should be pretty easy to perform experiments on. Target: diagnosis (malignant/ benign)
+- [Breast Cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29)- quite popular dataset, should be pretty easy to perform experiments on ~30 features ~500 observations. Target: diagnosis (malignant/ benign)
+- [Etherneum frauds](https://www.kaggle.com/vagifa/ethereum-frauddetection-dataset) data related to transactions of Etherneum. Imbalanced, only numeric (except for target), ~50 features, ~10k observations. Target: was this transaction a fraud?
