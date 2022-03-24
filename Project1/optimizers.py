@@ -88,6 +88,8 @@ class GradientDescent(Optimizer):
             losses.append(cur_loss) 
             if cur_loss < min_loss:
                 return_w = w
+                #I think the line below makes sense 
+                min_loss=cur_loss
             if Optimizer.do_early_stop(losses):
                 print('Early stopping')
                 break
@@ -156,6 +158,8 @@ class IRLS(Optimizer):
             #print("działam")
             if cur_loss < min_loss:
                 return_w = w
+                #I think the line below makes sense 
+                min_loss=cur_loss
             if Optimizer.do_early_stop(losses):
                 print('Early stopping')
                 break
@@ -201,7 +205,7 @@ class ADAM(Optimizer):
         left_arguments = set(kw) - required_arguments
         if len(left_arguments):
             raise ValueError(f'Unused arguments: {left_arguments}')
-            #https://www.youtube.com/watch?v=6nqV58NA_Ew
+            
     def train(self, X, y):
         X, y = X.copy(), y.copy()
         X = add_constant(X)
@@ -226,13 +230,13 @@ class ADAM(Optimizer):
             var=b2*var+(1-b2)*deriv**2
             mean_bias=mean/(1-b1**(e+1))
             var_bias=var/(1-b2**(e+1))
-            w-= lr*mean_bias/(np.sqrt(var_bias)+self.epsilon)
-            print("var",var_bias,"\nmean",mean_bias,"\nlr",lr,"\nw:",
-                  lr/(np.sqrt(var_bias)+self.epsilon)*mean_bias)
+            w-= lr*mean_bias/(np.sqrt(var_bias)+self.epsilon)    
             cur_loss = Optimizer.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss) 
             if cur_loss < min_loss:
                 return_w = w
+                #I think the line below makes sense 
+                min_loss=cur_loss
             if Optimizer.do_early_stop(losses):
                 print('Early stopping')
                 break
