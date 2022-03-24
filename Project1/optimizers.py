@@ -121,12 +121,12 @@ class IRLS(Optimizer):
         return dw
     
     @staticmethod
-    def hessian(X,y_pred,weights):
+    def hessian_inv(X,y_pred,weights):
         n=len(X)
         diagonal=(y_pred*(1-y_pred)).flatten()
         S=np.diag(diagonal)
         hes=X.T@S@X
-        return hes
+        return np.linalg.inv(hes)
     
     @staticmethod
     def check_arguments(kw):
@@ -149,11 +149,88 @@ class IRLS(Optimizer):
         for e in tqdm(range(self.epochs)):
             y_pred_prob = expit(X @ w)
             w_deriv = self.gradients(X, y, y_pred_prob)
-            w_hess= self.hessian(X,y_pred_prob,w)
-            w -= w_hess @ w_deriv
+            w_hess_inv= self.hessian_inv(X,y_pred_prob,w)
+            w -= w_hess_inv @ w_deriv
             cur_loss = Optimizer.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss) 
             #print("działam")
+            if cur_loss < min_loss:
+                return_w = w
+            if Optimizer.do_early_stop(losses):
+                print('Early stopping')
+                break
+        self.w = return_w
+        self.losses = losses
+        self.is_trained = True 
+        
+    def predict(self, X_new):
+        if not self.is_trained:
+            raise ValueError('This model has not been trained yet.')
+        X = X_new.copy()
+        X = add_constant(X)
+        return ((X @ self.w) >= 0).astype(int).reshape((-1,))
+    
+class ADAM(Optimizer):
+    
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.check_arguments(kwargs)
+        self.name = 'Adaptive Moment Estimation'
+        self.w = None
+        self.losses = None
+        self.epochs = kwargs['epochs']
+        self.learning_rate = kwargs['learning_rate']
+        self.beta_1=kwargs['beta_1']
+        self.beta_2=kwargs['beta_2']
+        self.epsilon=kwargs['epsilon']
+        self.is_trained = False
+        #print("tworzę się")
+   
+    @staticmethod
+    def gradients(X, y_true, y_pred):
+        n = len(X)
+        dw = X.T@(y_pred-y_true)/n
+        return dw
+
+    @staticmethod
+    def check_arguments(kw):
+        required_arguments = {'epochs','learning_rate','beta_1','beta_2','epsilon'}
+        lacking_arguments = required_arguments - set(kw)
+        if len(lacking_arguments):
+            raise ValueError(f'Missing required arguments: {lacking_arguments}')
+        left_arguments = set(kw) - required_arguments
+        if len(left_arguments):
+            raise ValueError(f'Unused arguments: {left_arguments}')
+            #https://www.youtube.com/watch?v=6nqV58NA_Ew
+    def train(self, X, y):
+        X, y = X.copy(), y.copy()
+        X = add_constant(X)
+        n, k = X.shape
+        
+        w = np.zeros((k, 1))
+        y = y.reshape((-1, 1))
+        mean=np.zeros((k, 1))
+        var=np.zeros((k, 1))
+        
+        b1=self.beta_1
+        b2=self.beta_2
+        lr=self.learning_rate
+        
+        losses = []
+        min_loss = np.inf
+        for e in tqdm(range(self.epochs)):
+            lr/=np.sqrt(e+1)            
+            y_pred_prob = expit(X @ w)
+            deriv = self.gradients(X, y, y_pred_prob)
+            mean=b1*mean+(1-b1)*deriv
+            var=b2*var+(1-b2)*deriv**2
+            mean_bias=mean/(1-b1**(e+1))
+            var_bias=var/(1-b2**(e+1))
+            w-= lr*mean_bias/(np.sqrt(var_bias)+self.epsilon)
+            print("var",var_bias,"\nmean",mean_bias,"\nlr",lr,"\nw:",
+                  lr/(np.sqrt(var_bias)+self.epsilon)*mean_bias)
+            cur_loss = Optimizer.binary_cross_entropy_loss(y, expit(X @ w))
+            losses.append(cur_loss) 
             if cur_loss < min_loss:
                 return_w = w
             if Optimizer.do_early_stop(losses):
