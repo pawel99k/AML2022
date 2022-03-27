@@ -213,8 +213,8 @@ class ADAM(Optimizer):
         
         w = np.zeros((k, 1))
         y = y.reshape((-1, 1))
-        mean=0
-        var=0
+        mean=np.zeros((k, 1))
+        var=np.zeros((k, 1))
         
         b1=self.beta_1
         b2=self.beta_2
@@ -223,7 +223,7 @@ class ADAM(Optimizer):
         losses = []
         min_loss = np.inf
         for e in tqdm(range(self.epochs)):
-            if e>:
+            if e>0:
                 lr*=np.sqrt(e)/np.sqrt(e+1)
             y_pred_prob = expit(X @ w)
             deriv = self.gradients(X, y, y_pred_prob)
