@@ -23,7 +23,7 @@ class Optimizer(ABC):
     @staticmethod
     def binary_cross_entropy_loss(y_true, y_prob):
         n = y_true.shape[0]
-        loss_value = -(np.log(y_prob[y_true]).sum() + np.log(1-y_prob[y_true==0]).sum())/n
+        loss_value = -(np.log(y_prob[y_true==1]).sum() + np.log(1-y_prob[y_true==0]).sum())/n
         return loss_value
     
     @abstractmethod
@@ -213,8 +213,8 @@ class ADAM(Optimizer):
         
         w = np.zeros((k, 1))
         y = y.reshape((-1, 1))
-        mean=np.zeros((k, 1))
-        var=np.zeros((k, 1))
+        mean=0
+        var=0
         
         b1=self.beta_1
         b2=self.beta_2
@@ -223,11 +223,12 @@ class ADAM(Optimizer):
         losses = []
         min_loss = np.inf
         for e in tqdm(range(self.epochs)):
-            lr/=np.sqrt(e+1)            
+            if e>:
+                lr*=np.sqrt(e)/np.sqrt(e+1)
             y_pred_prob = expit(X @ w)
             deriv = self.gradients(X, y, y_pred_prob)
             mean=b1*mean+(1-b1)*deriv
-            var=b2*var+(1-b2)*deriv**2
+            var=b2*var+(1-b2)*(deriv**2)
             mean_bias=mean/(1-b1**(e+1))
             var_bias=var/(1-b2**(e+1))
             w-= lr*mean_bias/(np.sqrt(var_bias)+self.epsilon)    
