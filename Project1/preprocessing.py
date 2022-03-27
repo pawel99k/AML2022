@@ -7,7 +7,7 @@ import seaborn as sns
 
 class Preprocessor:
     
-    def __init__(self, impute_strategy='mean'):
+    def __init__(self, impute_strategy='most_frequent'):
         self.imputer = SimpleImputer(strategy=impute_strategy)
         self.categorical_columns_values = None
         self.collinear_cols = None
@@ -17,10 +17,10 @@ class Preprocessor:
         self.imputer.fit(X)
     
     def impute_transform(self, X):
-        return self.imputer.transform(X)
+        return pd.DataFrame(self.imputer.transform(X),columns=X.columns).astype(dtype='float64',copy=False,errors='ignore')
     
     def impute_fit_transform(self, X):
-        return self.imputer.fit_transform(X)
+        return pd.DataFrame(self.imputer.fit_transform(X),columns=X.columns).astype(dtype='float64',copy=False,errors='ignore')
     
     #OHE: modified to drop value 'unknown' by default
     
@@ -81,7 +81,9 @@ class Preprocessor:
         return X.loc[train_index, :], X.loc[test_index, :], y.loc[train_index], y.loc[test_index]
     
     def remove_multicollinearity_fit_transform(self, X, vif_thresh=10):
-        X = X.copy()
+        #modified to ignore features of type object"
+        X_cat=X.select_dtypes(include='object').copy()
+        X = X.select_dtypes(exclude='object').copy()
         n = X.shape[1]
         cols_dropped = []
         while True:
@@ -98,8 +100,8 @@ class Preprocessor:
                 break
         self.collinear_cols = cols_dropped
         self.vif_thresh = vif_thresh
-        print(X.shape[1]," features left in dataset")
-        return X
+        print(X.shape[1],"numerical features left in dataset ",X_cat.shape[1], " categorical" )
+        return X.join(X_cat)
     
     def remove_multicollinearity_transform(self, X):
         if self.vif_thresh is None:
