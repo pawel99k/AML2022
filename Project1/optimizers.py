@@ -8,6 +8,7 @@ class Optimizer(ABC):
     
     def __init__(self):
         self.name = None
+        self.is_trained = False
     
     @staticmethod
     def do_early_stop(loss_list, check_no_progress_epochs=10):
@@ -26,9 +27,6 @@ class Optimizer(ABC):
         loss_value = -(np.log(y_prob[y_true]).sum() + np.log(1-y_prob[y_true==0]).sum())/n
         return loss_value
     
-    @abstractmethod
-    def check_arguments(self, kwargs) -> None:
-        pass
     
     @abstractmethod
     def train(self, X, y) -> None:
@@ -37,12 +35,33 @@ class Optimizer(ABC):
     @abstractmethod
     def predict(self, X) -> np.ndarray:
         pass
+    
+    @staticmethod
+    def gradients(X, y_true, y_pred):
+        n = len(X)
+        dw = X.T@(y_pred-y_true)/n
+        return dw
+    
+    def check_arguments(self, kw, required_arguments) -> None:
+        lacking_arguments = required_arguments - set(kw)
+        if len(lacking_arguments):
+            raise ValueError(f'Missing required arguments: {lacking_arguments}')
+        left_arguments = set(kw) - required_arguments
+        if len(left_arguments):
+            raise ValueError(f'Unused arguments: {left_arguments}')
+    
+    def predict(self, X_new):
+        if not self.is_trained:
+            raise ValueError('This model has not been trained yet.')
+        X = X_new.copy()
+        X = add_constant(X)
+        return ((X @ self.w) >= 0).astype(int).reshape((-1,))
         
 class GradientDescent(Optimizer):
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.check_arguments(kwargs)
+        self.check_arguments(kwargs, {'batch_size', 'epochs', 'learning_rate'})
         self.name = 'Gradient Descent'
         self.w = None
         self.losses = None
@@ -50,22 +69,6 @@ class GradientDescent(Optimizer):
         self.epochs = kwargs['epochs']
         self.learning_rate = kwargs['learning_rate']
         self.is_trained = False
-
-    @staticmethod
-    def gradients(X, y_true, y_pred):
-        n = len(X)
-        dw = X.T@(y_pred-y_true)/n
-        return dw
-    
-    @staticmethod
-    def check_arguments(kw):
-        required_arguments = {'batch_size', 'epochs', 'learning_rate'}
-        lacking_arguments = required_arguments - set(kw)
-        if len(lacking_arguments):
-            raise ValueError(f'Missing required arguments: {lacking_arguments}')
-        left_arguments = set(kw) - required_arguments
-        if len(left_arguments):
-            raise ValueError(f'Unused arguments: {left_arguments}')
 
     def train(self, X, y):
         X, y = X.copy(), y.copy()
@@ -84,43 +87,29 @@ class GradientDescent(Optimizer):
                 y_pred_prob = expit(x_batch_subset @ w)
                 w_deriv = self.gradients(x_batch_subset, y_batch_subset, y_pred_prob)
                 w -= self.learning_rate * w_deriv
-            cur_loss = Optimizer.binary_cross_entropy_loss(y, expit(X @ w))
+            cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss) 
             if cur_loss < min_loss:
                 return_w = w
-                #I think the line below makes sense 
                 min_loss=cur_loss
-            if Optimizer.do_early_stop(losses):
+            if self.do_early_stop(losses):
                 print('Early stopping')
                 break
         self.w = return_w
         self.losses = losses
         self.is_trained = True
     
-    def predict(self, X_new):
-        if not self.is_trained:
-            raise ValueError('This model has not been trained yet.')
-        X = X_new.copy()
-        X = add_constant(X)
-        return ((X @ self.w) >= 0).astype(int).reshape((-1,))
     
 class IRLS(Optimizer):
     
     def __init__(self, **kwargs):
         super().__init__()
-        self.check_arguments(kwargs)
+        self.check_arguments(kwargs, {'epochs'})
         self.name = 'Iterative Reweighted Least Squares'
         self.w = None
         self.losses = None
         self.epochs = kwargs['epochs']
         self.is_trained = False
-        #print("tworzę się")
-   
-    @staticmethod
-    def gradients(X, y_true, y_pred):
-        n = len(X)
-        dw = X.T@(y_pred-y_true)/n
-        return dw
     
     @staticmethod
     def hessian_inv(X,y_pred,weights):
@@ -129,17 +118,7 @@ class IRLS(Optimizer):
         S=np.diag(diagonal)
         hes=X.T@S@X
         return np.linalg.inv(hes)
-    
-    @staticmethod
-    def check_arguments(kw):
-        required_arguments = {'epochs'}
-        lacking_arguments = required_arguments - set(kw)
-        if len(lacking_arguments):
-            raise ValueError(f'Missing required arguments: {lacking_arguments}')
-        left_arguments = set(kw) - required_arguments
-        if len(left_arguments):
-            raise ValueError(f'Unused arguments: {left_arguments}')
-            
+
     def train(self, X, y):
         X, y = X.copy(), y.copy()
         X = add_constant(X)
@@ -153,32 +132,24 @@ class IRLS(Optimizer):
             w_deriv = self.gradients(X, y, y_pred_prob)
             w_hess_inv= self.hessian_inv(X,y_pred_prob,w)
             w -= w_hess_inv @ w_deriv
-            cur_loss = Optimizer.binary_cross_entropy_loss(y, expit(X @ w))
+            cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss) 
-            #print("działam")
             if cur_loss < min_loss:
                 return_w = w
                 #I think the line below makes sense 
                 min_loss=cur_loss
-            if Optimizer.do_early_stop(losses):
+            if self.do_early_stop(losses):
                 print('Early stopping')
                 break
         self.w = return_w
         self.losses = losses
         self.is_trained = True 
-        
-    def predict(self, X_new):
-        if not self.is_trained:
-            raise ValueError('This model has not been trained yet.')
-        X = X_new.copy()
-        X = add_constant(X)
-        return ((X @ self.w) >= 0).astype(int).reshape((-1,))
-    
+
 class ADAM(Optimizer):
     
     def __init__(self, **kwargs):
         super().__init__()
-        self.check_arguments(kwargs)
+        self.check_arguments(kwargs, {'epochs','learning_rate','beta_1','beta_2','epsilon'})
         self.name = 'Adaptive Moment Estimation'
         self.w = None
         self.losses = None
@@ -188,23 +159,6 @@ class ADAM(Optimizer):
         self.beta_2=kwargs['beta_2']
         self.epsilon=kwargs['epsilon']
         self.is_trained = False
-        #print("tworzę się")
-   
-    @staticmethod
-    def gradients(X, y_true, y_pred):
-        n = len(X)
-        dw = X.T@(y_pred-y_true)/n
-        return dw
-
-    @staticmethod
-    def check_arguments(kw):
-        required_arguments = {'epochs','learning_rate','beta_1','beta_2','epsilon'}
-        lacking_arguments = required_arguments - set(kw)
-        if len(lacking_arguments):
-            raise ValueError(f'Missing required arguments: {lacking_arguments}')
-        left_arguments = set(kw) - required_arguments
-        if len(left_arguments):
-            raise ValueError(f'Unused arguments: {left_arguments}')
             
     def train(self, X, y):
         X, y = X.copy(), y.copy()
@@ -231,23 +185,16 @@ class ADAM(Optimizer):
             mean_bias=mean/(1-b1**(e+1))
             var_bias=var/(1-b2**(e+1))
             w-= lr*mean_bias/(np.sqrt(var_bias)+self.epsilon)    
-            cur_loss = Optimizer.binary_cross_entropy_loss(y, expit(X @ w))
+            cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss) 
             if cur_loss < min_loss:
                 return_w = w
                 #I think the line below makes sense 
                 min_loss=cur_loss
-            if Optimizer.do_early_stop(losses):
+            if self.do_early_stop(losses):
                 print('Early stopping')
                 break
         self.w = return_w
         self.losses = losses
         self.is_trained = True 
-        
-    def predict(self, X_new):
-        if not self.is_trained:
-            raise ValueError('This model has not been trained yet.')
-        X = X_new.copy()
-        X = add_constant(X)
-        return ((X @ self.w) >= 0).astype(int).reshape((-1,))
-    
+  
