@@ -17,10 +17,10 @@ class Preprocessor:
         self.imputer.fit(X)
     
     def impute_transform(self, X):
-        return pd.DataFrame(self.imputer.transform(X),columns=X.columns).astype(dtype='float64',copy=False,errors='ignore')
+        return self.imputer.transform(X)
     
     def impute_fit_transform(self, X):
-        return pd.DataFrame(self.imputer.fit_transform(X),columns=X.columns).astype(dtype='float64',copy=False,errors='ignore')
+        return (self.imputer.fit_transform(X),columns=X.columns)
     
     #OHE: modified to drop value 'unknown' by default
     
