@@ -20,7 +20,7 @@ class Preprocessor:
         return self.imputer.transform(X)
     
     def impute_fit_transform(self, X):
-        return (self.imputer.fit_transform(X),columns=X.columns)
+        return self.imputer.fit_transform(X)
     
     #OHE: modified to drop value 'unknown' by default
     
