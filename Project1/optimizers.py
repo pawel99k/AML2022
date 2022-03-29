@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from statsmodels.tools import add_constant
 from scipy.special import expit
 from tqdm.notebook import tqdm
+from sklearn.metrics import log_loss
 
+import matplotlib.pyplot as plt
 
 class Optimizer(ABC):
 
@@ -25,7 +27,7 @@ class Optimizer(ABC):
     @staticmethod
     def binary_cross_entropy_loss(y_true, y_prob):
         n = y_true.shape[0]
-        loss_value = -(np.log(y_prob[y_true == 1]).sum() + np.log(1 - y_prob[y_true == 0]).sum()) / n
+        loss_value = log_loss(y_true, y_prob)#-(np.log(y_prob[y_true == 1]).sum() + np.log(1 - y_prob[y_true == 0]).sum()) / n
         return loss_value
 
     @abstractmethod
@@ -54,7 +56,7 @@ class Optimizer(ABC):
         if not self.is_trained:
             raise ValueError('This model has not been trained yet.')
         X = X_new.copy()
-        X = add_constant(X)
+        X = np.c_[np.ones((X.shape[0], 1)), X]
         return ((X @ self.w) >= 0).astype(int).reshape((-1,))
 
 
@@ -75,11 +77,13 @@ class GradientDescent(Optimizer):
         X, y = X.copy(), y.copy()
         X = add_constant(X)
         n, k = X.shape
-        w = np.zeros((k, 1))
+        w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
+        return_w = w
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
         for e in tqdm(range(self.epochs)):
+            np.random.shuffle(X) #TO check
             for i in range((n - 1) // self.batch_size + 1):
                 batch_begin = i * self.batch_size
                 batch_end = (i + 1) * self.batch_size
@@ -87,7 +91,8 @@ class GradientDescent(Optimizer):
                 y_batch_subset = y[batch_begin:batch_end]
                 y_pred_prob = expit(x_batch_subset @ w)
                 w_deriv = self.gradients(x_batch_subset, y_batch_subset, y_pred_prob)
-                w -= self.learning_rate * w_deriv
+                w_diff = -self.learning_rate * w_deriv
+                w = w + w_diff
             cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss)
             if cur_loss < min_loss:
@@ -125,6 +130,7 @@ class IRLS(Optimizer):
         X = add_constant(X)
         n, k = X.shape
         w = np.zeros((k, 1))
+        return_w = w
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
@@ -178,6 +184,7 @@ class ADAM(Optimizer):
 
         losses = []
         min_loss = np.inf
+        return_w = w
         for e in tqdm(range(self.epochs)):
             if e > 0:
                 lr *= np.sqrt(e) / np.sqrt(e + 1)
