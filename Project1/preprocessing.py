@@ -93,7 +93,7 @@ class Preprocessor:
             if max_vif > vif_thresh:
                 maxloc = vif.index(max_vif)
                 col_drop = X.columns[maxloc]
-                print(f'Dropping {col_drop} with vif={max_vif}')
+                #print(f'Dropping {col_drop} with vif={max_vif}')
                 X = X.drop(col_drop, axis=1)
                 cols_dropped.append(col_drop)
             else:
@@ -122,3 +122,35 @@ class Preprocessor:
         plt.figure(figsize=(16,13))
         sns.heatmap(X.corr())
         plt.show()
+        
+    @staticmethod    
+    def class_balancing(X_train,y_train,perc_p=0.2):
+        X_train = X_train.copy()
+        y_train = y_train.copy()
+        
+        total_n=len(y_train)
+        neg_index=y_train[y_train==0].index
+        pos_index=y_train[y_train==1].index
+        pos_classes_n = len(pos_index)
+        neg_classes_n = total_n-pos_classes_n
+        diff_n=pos_classes_n-neg_classes_n
+
+        if (diff_n> perc_p*total_n):
+            #if there is above 20 perc point diff, much more of neg_class
+            neg_c = np.random.choice(neg_index, size=abs(diff_n), replace=True)
+            neg_c = np.hstack([neg_c,neg_index])
+            pos_c = pos_index
+        elif (diff_n< -perc_p*total_n):
+            #if pos_class is sig_bigger
+            pos_c = np.random.choice(pos_index, size=abs(diff_n), replace=True)
+            pos_c = np.hstack([pos_c,pos_index])
+            neg_c = neg_index
+        else:
+            neg_c = neg_index
+            pos_c = pos_index
+            
+        X_train = X_train.loc[np.hstack([pos_c, neg_c])]
+        y_train = y_train.loc[np.hstack([pos_c, neg_c])]
+        print("Training dataset has now ", len(y_train), "obervations")
+            
+        return (X_train,y_train)

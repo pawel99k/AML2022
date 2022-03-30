@@ -82,7 +82,7 @@ class GradientDescent(Optimizer):
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
-        for e in tqdm(range(self.epochs)):
+        for e in range(self.epochs):
             np.random.shuffle(X) #TO check
             for i in range((n - 1) // self.batch_size + 1):
                 batch_begin = i * self.batch_size
@@ -134,7 +134,7 @@ class IRLS(Optimizer):
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
-        for e in tqdm(range(self.epochs)):
+        for e in range(self.epochs):
             y_pred_prob = expit(X @ w)
             w_deriv = self.gradients(X, y, y_pred_prob)
             w_hess_inv = self.hessian_inv(X, y_pred_prob, w)
@@ -185,7 +185,7 @@ class ADAM(Optimizer):
         losses = []
         min_loss = np.inf
         return_w = w
-        for e in tqdm(range(self.epochs)):
+        for e in range(self.epochs):
             if e > 0:
                 lr *= np.sqrt(e) / np.sqrt(e + 1)
             y_pred_prob = expit(X @ w)
