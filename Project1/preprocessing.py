@@ -151,6 +151,7 @@ class Preprocessor:
             
         X_train = X_train.loc[np.hstack([pos_c, neg_c])]
         y_train = y_train.loc[np.hstack([pos_c, neg_c])]
-        print("Training dataset has now ", len(y_train), "obervations")
+        print("Training dataset has now ", len(y_train), "obervations.",
+              (y_train.mean())*100," percent is in positive group.")
             
         return (X_train,y_train)

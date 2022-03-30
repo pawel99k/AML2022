@@ -45,3 +45,19 @@ def f_measure(y_pred, y_test):
     r = recall(y_pred, y_test)
     p = precision(y_pred, y_test)
     return 2*r*p/(r+p)
+
+def get_measures(y_pred, y_test):
+    acc=accuracy(y_pred, y_test)
+    try:
+        rec=recall(y_pred, y_test)
+    except ZeroDivisionError:
+        rec=np.NAN;
+    try:
+        prec=precision(y_pred, y_test)
+    except ZeroDivisionError:
+        prec=np.NAN;
+    try:
+        f_me=f_measure(y_pred, y_test)
+    except ZeroDivisionError:
+        f_me=np.NAN;
+    return (acc,rec,prec,f_me)

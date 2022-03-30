@@ -19,7 +19,7 @@ class Optimizer(ABC):
             return False
         last_loss_list = loss_list[-(check_no_progress_epochs + 1):]
         for l_i, loss in enumerate(last_loss_list):
-            if l_i + 1 >= check_no_progress_epochs:
+            if l_i + 1 > check_no_progress_epochs:
                 return True
             if loss > last_loss_list[l_i + 1]:
                 return False
@@ -77,13 +77,14 @@ class GradientDescent(Optimizer):
         X, y = X.copy(), y.copy()
         X = add_constant(X)
         n, k = X.shape
-        w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
+        #w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
+        w = np.random.normal(size=k).reshape((-1, 1))
         return_w = w
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
         for e in range(self.epochs):
-            np.random.shuffle(X) #TO check
+            #np.random.shuffle(together) #TO be fixed
             for i in range((n - 1) // self.batch_size + 1):
                 batch_begin = i * self.batch_size
                 batch_end = (i + 1) * self.batch_size
@@ -143,7 +144,6 @@ class IRLS(Optimizer):
             losses.append(cur_loss)
             if cur_loss < min_loss:
                 return_w = w
-                # I think the line below makes sense
                 min_loss = cur_loss
             if self.do_early_stop(losses):
                 print('Early stopping')
@@ -186,8 +186,8 @@ class ADAM(Optimizer):
         min_loss = np.inf
         return_w = w
         for e in range(self.epochs):
-            if e > 0:
-                lr *= np.sqrt(e) / np.sqrt(e + 1)
+            #if e > 0:
+            #    lr *= np.sqrt(e) / np.sqrt(e + 1)
             y_pred_prob = expit(X @ w)
             deriv = self.gradients(X, y, y_pred_prob)
             mean = b1 * mean + (1 - b1) * deriv
@@ -199,7 +199,6 @@ class ADAM(Optimizer):
             losses.append(cur_loss)
             if cur_loss < min_loss:
                 return_w = w
-                # I think the line below makes sense
                 min_loss = cur_loss
             if self.do_early_stop(losses):
                 print('Early stopping')
