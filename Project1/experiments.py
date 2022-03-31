@@ -22,12 +22,12 @@ def preprocess_data(X_train,y_train,X_test,y_test,remove_collinear,balance_class
     return (X_train,y_train,X_test,y_test)
 
 
-def test_learning_rates(X_train,y_train,X_test,y_test,l_rates,algorithms,n_epochs=250,beta_1=0.9,beta_2=0.99):
+def test_learning_rates(X_train,y_train,X_test,y_test,l_rates,algorithms,n_epochs=250,batch_size=32,beta_1=0.9,beta_2=0.99):
     results=pd.DataFrame(columns=['learning_rate','method','accuracy','recall','precision','F_measure'])
     for learning_rate in l_rates:
         for alg_short,alg_long in algorithms.items():
             if alg_short=='GD':
-                model=LogReg(optimization=alg_long, learning_rate=learning_rate, epochs=n_epochs, batch_size=32)
+                model=LogReg(optimization=alg_long, learning_rate=learning_rate, epochs=n_epochs, batch_size=batch_size)
             elif alg_short=='SGD':
                 model=LogReg(optimization=alg_long, learning_rate=learning_rate, epochs=n_epochs)
             else:
