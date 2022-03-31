@@ -58,6 +58,7 @@ class Preprocessor:
     
     @staticmethod
     def train_test_split(X, y, train_subset_proportion=0.75, keep_y_balance=True):
+        np.random.seed(568)
         if set(X.index) != set(y.index):
             raise AttributeError('Indices in X and y are not indetical')
         n=X.shape[0]

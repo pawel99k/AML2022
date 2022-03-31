@@ -45,23 +45,25 @@ def test_learning_rates(X_train,y_train,X_test,y_test,l_rates,algorithms,n_epoch
             results=pd.concat([results,this_row],ignore_index=True)
     return results
 
-def test_betas(X_train,y_train,X_test,y_test,tested_betas1,tested_betas2,n_epochs=250,lr=0.01):
+def test_betas(X_train,y_train,X_test,y_test,tested_betas1,tested_betas2,learning_rates,n_epochs=250):
     results=pd.DataFrame(columns=['beta1','beta2','accuracy','recall','precision','F_measure'])
-    for beta1 in tested_betas1:
-        for beta2 in tested_betas2:
-            model=LogReg(optimization='Adaptive Moment Estimation',
-                        learning_rate=lr,beta_1=beta1,beta_2=beta2,epsilon=1e-5, epochs=n_epochs)
-            model.train(X_train, y_train)
-            predictions=model.predict(X_test)
-            acc,recall,precision,f_measure=measures.get_measures(predictions, y_test)
-            this_row=pd.DataFrame({'beta1':beta1,
-                                'beta2':beta2,
-                                'accuracy':acc,
-                                'recall':recall,
-                                'precision':precision,
-                                'F_measure':f_measure},
-                                index=[0])
-            results=pd.concat([results,this_row],ignore_index=True)
+    for lr in learning_rates:
+        for beta1 in tested_betas1:
+            for beta2 in tested_betas2:
+                model=LogReg(optimization='Adaptive Moment Estimation',
+                            learning_rate=lr,beta_1=beta1,beta_2=beta2,epsilon=1e-5, epochs=n_epochs)
+                model.train(X_train, y_train)
+                predictions=model.predict(X_test)
+                acc,recall,precision,f_measure=measures.get_measures(predictions, y_test)
+                this_row=pd.DataFrame({'lr': lr,
+                                       'beta1':beta1,
+                                       'beta2':beta2,
+                                       'accuracy':acc,
+                                       'recall':recall,
+                                       'precision':precision,
+                                       'F_measure':f_measure},
+                                        index=[0])
+                results=pd.concat([results,this_row],ignore_index=True)
     return results
 def final_comparisson(X_train,y_train,X_test,y_test,models):
     results=pd.DataFrame(columns=['model','accuracy','recall','precision','f_measure'])
@@ -71,7 +73,6 @@ def final_comparisson(X_train,y_train,X_test,y_test,models):
         else:
             model.fit(X_train,y_train)
         predictions=model.predict(X_test)
-        acc=measures.accuracy(predictions, y_test)
         acc,recall,precision,f_measure=measures.get_measures(predictions, y_test)
         this_row=pd.DataFrame({'model':name
                             ,'accuracy':acc

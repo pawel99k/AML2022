@@ -4,6 +4,7 @@ from statsmodels.tools import add_constant
 from scipy.special import expit
 from sklearn.utils import shuffle
 #from tqdm.notebook import tqdm
+from scipy.sparse import diags
 from sklearn.metrics import log_loss
 
 import matplotlib.pyplot as plt
@@ -125,12 +126,13 @@ class IRLS(Optimizer):
     @staticmethod
     def hessian_inv(X, y_pred, weights):
         n = len(X)
-        diagonal = (y_pred * (1 - y_pred)).flatten()
-        S = np.diag(diagonal)
+        diagonal = (y_pred * (1 - y_pred))
         try:
-            hes_inv = np.linalg.inv(X.T @ S @ X)
-        except np.linalg.LinAlgError:
-            hes_inv=1e-3*np.diag(N=X.shape[1])
+            X_t = np.multiply(X, diagonal)
+            hes_inv = np.linalg.inv(X_t.T @ X)
+        except np.linalg.LinAlgError as e:
+            print(e)
+            hes_inv=1e-3*np.eye(N=X.shape[1])
         return hes_inv
 
     def train(self, X, y):

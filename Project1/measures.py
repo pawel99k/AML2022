@@ -24,7 +24,7 @@ def recall(y_pred, y_test, check_cond=True):
     if check_cond:
         __check_initial_conditions(y_test, y_pred)
     if not y_test.sum():
-        raise ZeroDivisionError(f'Recall can not be calculated as there are no positive predictions.')
+        raise ZeroDivisionError(f'Recall can not be calculated as there are no positive observations.')
     tp = ((y_pred==1) & (y_pred==y_test)).sum()
     pv = y_test.sum()
     return tp/pv
@@ -36,7 +36,7 @@ def precision(y_pred, y_test, check_cond=True):
     if check_cond:
         __check_initial_conditions(y_test, y_pred)
     if not y_pred.sum():
-        raise ZeroDivisionError(f'Precision can not be calculated as there are no positive observations.')
+        raise ZeroDivisionError(f'Precision can not be calculated as there are no positive predictions.')
     tp = ((y_pred==1) & (y_pred==y_test)).sum()
     pp = y_pred.sum()
     return tp/pp
