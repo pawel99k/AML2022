@@ -131,7 +131,6 @@ class IRLS(Optimizer):
             X_t = np.multiply(X, diagonal)
             hes_inv = np.linalg.inv(X_t.T @ X)
         except np.linalg.LinAlgError as e:
-            print(e)
             hes_inv=1e-3*np.eye(N=X.shape[1])
         return hes_inv
 

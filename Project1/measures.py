@@ -36,7 +36,10 @@ def precision(y_pred, y_test, check_cond=True):
     if check_cond:
         __check_initial_conditions(y_test, y_pred)
     if not y_pred.sum():
-        raise ZeroDivisionError(f'Precision can not be calculated as there are no positive predictions.')
+        return 0
+#         raise ZeroDivisionError(f'Precision can not be calculated as there are no positive predictions.')
+# Error would be relevant here but sometimes we need to have a value of metric even in a non-sense case 
+    
     tp = ((y_pred==1) & (y_pred==y_test)).sum()
     pp = y_pred.sum()
     return tp/pp

@@ -33,7 +33,6 @@ class Preprocessor:
         """
         self.categorical_columns_values = {c: set(X[c].unique())
                                            for c in X.select_dtypes(include='object').columns}
-        X_OHE = pd.get_dummies(X)
         for c, c_values in self.categorical_columns_values.items():
             u = drop_values.get(c, 'unknown')
             if u in c_values:
