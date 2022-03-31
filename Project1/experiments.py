@@ -22,7 +22,7 @@ def preprocess_data(X_train,y_train,X_test,y_test,remove_collinear,balance_class
     return (X_train,y_train,X_test,y_test)
 
 
-def test_learning_rates(X_train,y_train,X_test,y_test,l_rates,algorithms,n_epochs=1000,beta_1=0.9,beta_2=0.9):
+def test_learning_rates(X_train,y_train,X_test,y_test,l_rates,algorithms,n_epochs=250,beta_1=0.9,beta_2=0.99):
     results=pd.DataFrame(columns=['learning_rate','method','accuracy','recall','precision','F_measure'])
     for learning_rate in l_rates:
         for alg_short,alg_long in algorithms.items():
@@ -45,12 +45,12 @@ def test_learning_rates(X_train,y_train,X_test,y_test,l_rates,algorithms,n_epoch
             results=pd.concat([results,this_row],ignore_index=True)
     return results
 
-def test_betas(X_train,y_train,X_test,y_test,tested_betas1,tested_betas2,lr=0.01):
+def test_betas(X_train,y_train,X_test,y_test,tested_betas1,tested_betas2,n_epochs=250,lr=0.01):
     results=pd.DataFrame(columns=['beta1','beta2','accuracy','recall','precision','F_measure'])
     for beta1 in tested_betas1:
         for beta2 in tested_betas2:
             model=LogReg(optimization='Adaptive Moment Estimation',
-                        learning_rate=lr,beta_1=beta1,beta_2=beta2,epsilon=1e-5, epochs=500)
+                        learning_rate=lr,beta_1=beta1,beta_2=beta2,epsilon=1e-5, epochs=n_epochs)
             model.train(X_train, y_train)
             predictions=model.predict(X_test)
             acc,recall,precision,f_measure=measures.get_measures(predictions, y_test)
