@@ -75,9 +75,13 @@ class GradientDescent(Optimizer):
         self.is_trained = False
 
     def train(self, X, y):
+        
         X, y = X.copy(), y.copy()
         X = add_constant(X)
         n, k = X.shape
+        #pozwala na wrzucanie na ile batchy ma dzielić dataset, bo 32 w jednym datasecie to dużo a w innym mało
+        if (self.batch_size<1):
+            self.batch_size=int(self.batch_size*n)
         w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
         return_w = w.copy()
         y = y.reshape((-1, 1))
@@ -189,8 +193,8 @@ class ADAM(Optimizer):
         min_loss = np.inf
         return_w = w.copy()
         for e in range(self.epochs):
-            #if e > 0:
-            #    lr *= np.sqrt(e) / np.sqrt(e + 1)
+            if e > 0:
+                 lr *= np.sqrt(e) / np.sqrt(e + 1)
             y_pred_prob = expit(X @ w)
             deriv = self.gradients(X, y, y_pred_prob)
             mean = b1 * mean + (1 - b1) * deriv
