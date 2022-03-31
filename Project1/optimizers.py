@@ -19,7 +19,7 @@ class Optimizer(ABC):
             return False
         last_loss_list = loss_list[-(check_no_progress_epochs + 1):]
         for l_i, loss in enumerate(last_loss_list):
-            if l_i + 1 > check_no_progress_epochs:
+            if l_i + 1 >= check_no_progress_epochs:
                 return True
             if loss > last_loss_list[l_i + 1]:
                 return False
@@ -77,8 +77,8 @@ class GradientDescent(Optimizer):
         X, y = X.copy(), y.copy()
         X = add_constant(X)
         n, k = X.shape
-        #w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
-        w = np.random.normal(size=k).reshape((-1, 1))
+        w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
+        #w = np.random.normal(size=k).reshape((-1, 1))
         return_w = w
         y = y.reshape((-1, 1))
         losses = []
@@ -100,7 +100,7 @@ class GradientDescent(Optimizer):
                 return_w = w
                 min_loss = cur_loss
             if self.do_early_stop(losses):
-                print('Early stopping')
+                #print('Early stopping')
                 break
         self.w = return_w
         self.losses = losses
@@ -123,8 +123,11 @@ class IRLS(Optimizer):
         n = len(X)
         diagonal = (y_pred * (1 - y_pred)).flatten()
         S = np.diag(diagonal)
-        hes = X.T @ S @ X
-        return np.linalg.inv(hes)
+        try:
+            hes_inv = np.linalg.inv(X.T @ S @ X)
+        except np.linalg.LinAlgError:
+            hes_inv=1e-3*np.diag(N=X.shape[1])
+        return hes_inv
 
     def train(self, X, y):
         X, y = X.copy(), y.copy()
@@ -146,7 +149,7 @@ class IRLS(Optimizer):
                 return_w = w
                 min_loss = cur_loss
             if self.do_early_stop(losses):
-                print('Early stopping')
+                #print('Early stopping')
                 break
         self.w = return_w
         self.losses = losses
@@ -201,7 +204,7 @@ class ADAM(Optimizer):
                 return_w = w
                 min_loss = cur_loss
             if self.do_early_stop(losses):
-                print('Early stopping')
+                #print('Early stopping')
                 break
         self.w = return_w
         self.losses = losses
