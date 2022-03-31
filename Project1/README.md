@@ -6,7 +6,7 @@
 
 ## Chosen datasets:
 
-- [Breast Cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29)- quite popular dataset, should be pretty easy to perform experiments on ~30 features ~500 observations. Target: diagnosis (malignant/ benign)
+- [Breast Cancer](https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data)- quite popular dataset, should be pretty easy to perform experiments on ~30 features ~500 observations. Target: diagnosis (malignant/ benign)
 - [Etherneum frauds](https://www.kaggle.com/vagifa/ethereum-frauddetection-dataset) data related to transactions of Etherneum. Imbalanced, only numeric (except for target), ~50 features, ~10k observations. Target: was this transaction a fraud?
 - [Bank Marketing](https://archive.ics.uci.edu/ml/datasets/Bank+Marketing) - Data related with bank marketing companies. Target: Did the client subscribe a term deposit? Many observations: 41188, 20 inputs. Imbalanced.
 - [Diabetic retinopathy](https://archive.ics.uci.edu/ml/datasets/Diabetic+Retinopathy+Debrecen+Data+Set) - Data with features extracted from Messidor image sets. Only numeric variables. Matrix 1151x20, quite balanced at a glance.
