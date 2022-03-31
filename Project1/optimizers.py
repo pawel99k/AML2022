@@ -2,7 +2,8 @@ import numpy as np
 from abc import ABC, abstractmethod
 from statsmodels.tools import add_constant
 from scipy.special import expit
-from tqdm.notebook import tqdm
+from sklearn.utils import shuffle
+#from tqdm.notebook import tqdm
 from sklearn.metrics import log_loss
 
 import matplotlib.pyplot as plt
@@ -78,13 +79,12 @@ class GradientDescent(Optimizer):
         X = add_constant(X)
         n, k = X.shape
         w = np.zeros((k, 1)) # np.random.normal(size=k).reshape((-1, 1))
-        #w = np.random.normal(size=k).reshape((-1, 1))
-        return_w = w
+        return_w = w.copy()
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
         for e in range(self.epochs):
-            #np.random.shuffle(together) #TO be fixed
+            X, y = shuffle(X, y, random_state=53)
             for i in range((n - 1) // self.batch_size + 1):
                 batch_begin = i * self.batch_size
                 batch_end = (i + 1) * self.batch_size
@@ -97,7 +97,7 @@ class GradientDescent(Optimizer):
             cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss)
             if cur_loss < min_loss:
-                return_w = w
+                return_w = w.copy()
                 min_loss = cur_loss
             if self.do_early_stop(losses):
                 #print('Early stopping')
@@ -134,7 +134,7 @@ class IRLS(Optimizer):
         X = add_constant(X)
         n, k = X.shape
         w = np.zeros((k, 1))
-        return_w = w
+        return_w = w.copy()
         y = y.reshape((-1, 1))
         losses = []
         min_loss = np.inf
@@ -146,7 +146,7 @@ class IRLS(Optimizer):
             cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss)
             if cur_loss < min_loss:
-                return_w = w
+                return_w = w.copy()
                 min_loss = cur_loss
             if self.do_early_stop(losses):
                 #print('Early stopping')
@@ -187,7 +187,7 @@ class ADAM(Optimizer):
 
         losses = []
         min_loss = np.inf
-        return_w = w
+        return_w = w.copy()
         for e in range(self.epochs):
             #if e > 0:
             #    lr *= np.sqrt(e) / np.sqrt(e + 1)
@@ -201,7 +201,7 @@ class ADAM(Optimizer):
             cur_loss = self.binary_cross_entropy_loss(y, expit(X @ w))
             losses.append(cur_loss)
             if cur_loss < min_loss:
-                return_w = w
+                return_w = w.copy()
                 min_loss = cur_loss
             if self.do_early_stop(losses):
                 #print('Early stopping')
