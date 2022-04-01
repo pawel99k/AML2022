@@ -28,8 +28,9 @@ class Optimizer(ABC):
 
     @staticmethod
     def binary_cross_entropy_loss(y_true, y_prob):
-        n = y_true.shape[0]
-        loss_value = log_loss(y_true, y_prob)#-(np.log(y_prob[y_true == 1]).sum() + np.log(1 - y_prob[y_true == 0]).sum()) / n
+#         n = y_true.shape[0]
+#         -(np.log(y_prob[y_true == 1]).sum() + np.log(1 - y_prob[y_true == 0]).sum()) / n
+        loss_value = log_loss(y_true, y_prob)
         return loss_value
 
     @abstractmethod
