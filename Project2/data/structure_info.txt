@@ -1,0 +1,5 @@
+there are 3 untracked folders here:
+-artificial
+-digits
+-example_submission
+in data files are stored
