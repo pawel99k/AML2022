@@ -33,10 +33,11 @@ sapply(DATA_list,FUN=function(x) sum(is.na(x)))
 
 ### checking basic statistics of dataset
 
-quantiles_to_check <- c(0,0.05,0.25,0.50,0.75,0.90,0.95,0.99,1)
+quantiles_to_check <- c(0,0.05,0.25,0.50,0.75,0.90,0.95,0.99,0.999,1)
 
 basic_stat <- lapply(DATA_list,
                      FUN=function(x) do.call(cbind, lapply(x, quantile,probs = quantiles_to_check)))
+
 
 # View(basic_stat$artificial)
 # View(basic_stat$digits)
@@ -49,12 +50,22 @@ sum(basic_stat$digits['0%',]==basic_stat$digits["100%",])
 
 ### there are 45 completely useless columns in the dataset digits
 
-sum(basic_stat$digits['0%',]==basic_stat$digits["75%",])
-sum(basic_stat$digits['0%',]==basic_stat$digits["90%",])
-sum(basic_stat$digits['0%',]==basic_stat$digits["95%",])
+#max 60 obserwacji ma wartości inne od jednej, najmniejszej wartości
 sum(basic_stat$digits['0%',]==basic_stat$digits["99%",])
 
+#ile jest takich dla których max 0.1% (czyli max 6 obsercacji u nas w treningowym) wartości jest różne od wartości najmniejszej
+sum(basic_stat$digits['0%',]==basic_stat$digits["99.9%",])
+#jest ich 354 i ja bym sie upierał, żeby je od razu olewał
+
+#colnames(basic_stat$digits[,basic_stat$digits['0%',]==basic_stat$digits["99.9%",]])
+
 ### there are many features whose values are the same for significant number of observations
+
+#tutaj mamy 
+count_uniqe <- lapply(DATA_list,FUN=function(y) apply(y, 2, function(x) length(unique(x))))
+# count_uniqe$artificial
+# count_uniqe$digits
+
 
 
 ### Let us inpect correlation matrices, first we neeed to create them
@@ -65,11 +76,11 @@ corr_matrix <- lapply(DATA_list,fastCor,upperTri=TRUE,optBLAS=TRUE)
 corr_matrix <- lapply(corr_matrix,FUN=function(x) as.data.table(x))
 #View(cor_matrix$artificial)
 #View(cor_matrix$digits)
-
 ### let us check how many variables is "removeable" by in case we with to 
 ### remove some highly correlated ones (above value thresh)
 thresh <- 0.99
-
+length(unique(DATA_list$artificial$V1))
 sum(abs(corr_matrix$artificial)>thresh,na.rm = TRUE)
 
+#to jest liczba przypadków takichgit , niekoniecznie liczba zmiennych do wywalenia
 sum(abs(corr_matrix$digits)>thresh,na.rm = TRUE)

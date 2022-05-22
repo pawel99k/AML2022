@@ -4,3 +4,5 @@
 # ale aby GitHub nie ?trzymał? samych plików
 Project2/data/*/*
 .Rproj.user
+
+Project2/R_scripts/.Rhistory
