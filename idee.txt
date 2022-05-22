@@ -1,0 +1,24 @@
+anova
+mcfs (to pewnie ja)
+Boruta
+Lasso
+klasyczny RF
+chi square tests
+
+coś ewentualnie z radzeniem sobie gdy zmienne są w jakiś sposób powiązane
+(np na początku
+
+Train set
+75,25
+
+CrossVal
+najpierw Cross Val podział a potem feature selection
+(najpierw 5-fold?)
+
+Classifiers:
+Logistic
+RF
+XGBoost
+AdaBoost
+może sieć?
+?lightgbm?
