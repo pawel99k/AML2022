@@ -30,6 +30,11 @@ def get_data(remove_constant=True):
 def get_models_ba(X_train, X_test, y_train, y_test, verbose=True):
     # TODO dodać jakiś argument/argumenty pozwalające na dobieranie hiperparametrów modeli
     # najprościej chyba będzie to zrobić przy pomocy słowników
+
+    # to o czym rozmawialiśmy
+    X_test = X_test.copy()
+    X_test = X_test.loc[:, X_train.columns]
+
     models = (LogisticRegression(), RandomForestClassifier(), AdaBoostClassifier(), LGBMClassifier(), XGBClassifier())
     names = []
     BA_scores = []
