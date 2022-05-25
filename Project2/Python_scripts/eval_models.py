@@ -27,37 +27,17 @@ def get_data(remove_constant=True):
     return X_artificial, y_artificial, X_digits, y_digits
 
 
-
 def get_models_ba(X_train, X_test, y_train, y_test, verbose=True):
-    logistic_model = LogisticRegression(penalty="l2", max_iter=10000)
-    logistic_model.fit(X_train, y_train)
-    logistic_BA = balanced_accuracy_score(y_true=y_test, y_pred=logistic_model.predict(X_test))
-    if verbose:
-        print("Logistic model:    ", logistic_BA)
+    # TODO dodać jakiś argument/argumenty pozwalające na dobieranie hiperparametrów modeli
+    # najprościej chyba będzie to zrobić przy pomocy słowników
+    models = (LogisticRegression(), RandomForestClassifier(), AdaBoostClassifier(), LGBMClassifier(), XGBClassifier())
+    names = []
+    BA_scores = []
+    for model in models:
+        names.append(model.__class__.__name__)
+        model.fit(X_train, y_train)
+        BA_scores.append(balanced_accuracy_score(y_true=y_test, y_pred=model.predict(X_test)))
+        if verbose:
+            print(names[-1], BA_scores[-1])
 
-    random_forest_model = RandomForestClassifier(n_jobs=-1)  # do sprawdzenia parametry
-    random_forest_model.fit(X_train, y_train)
-    random_forest_BA = balanced_accuracy_score(y_true=y_test, y_pred=random_forest_model.predict(X_test))
-    if verbose:
-        print("RandomForest model:", random_forest_BA)
-
-    adaboost_model = AdaBoostClassifier(n_estimators=100)
-    adaboost_model.fit(X_train, y_train)
-    adaboost_BA = balanced_accuracy_score(y_true=y_test, y_pred=adaboost_model.predict(X_test))
-    if verbose:
-        print("AdaBoost model:    ", adaboost_BA)
-
-    lightgbm_model = LGBMClassifier()
-    lightgbm_model.fit(X_train, y_train)
-    lightgbm_BA = balanced_accuracy_score(y_true=y_test, y_pred=lightgbm_model.predict(X_test))
-    if verbose:
-        print("LightGBM model:    ", lightgbm_BA)
-
-    xgboost_model = XGBClassifier()  # do sprawdzenia parametry
-    xgboost_model.fit(X_train, y_train)
-    xgboost_BA = balanced_accuracy_score(y_true=y_test, y_pred=xgboost_model.predict(X_test))
-    if verbose:
-        print("XGBoost model:     ", xgboost_BA)
-
-    return pd.DataFrame(data={"Classifier": ["LogisticReg", "RandomForest", "AdaBoost", "LightGBM", "XGBoost"],
-                       "Balaned Accuracy": [logistic_BA, random_forest_BA, adaboost_BA, lightgbm_BA, xgboost_BA]})
+    return pd.DataFrame(data={"Classifier": names, "BA score": BA_scores})
