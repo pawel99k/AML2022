@@ -20,10 +20,10 @@ read_file <- function(x,data=TRUE,train=TRUE) {
   if(train){ 
     path <- str_c(path,"/",x,"_train")
     
-    if(data) path <- str_c(path,".DATA")
+    if(data) path <- str_c(path,".data")
     else path <- str_c(path,".labels")
   }
-  else path <- str_c(path,"/",x,"_valid.DATA")
+  else path <- str_c(path,"/",x,"_valid.data")
   
   fread(path)
 }
@@ -56,6 +56,15 @@ Dig_train <- tibble(X_dig[trainIndex_dig,],Y_dig[trainIndex_dig,])
 Dig_test <- tibble(X_dig[-trainIndex_dig,],Y_dig[-trainIndex_dig,])
 }
 Art_mcfs <- mcfs(formula=class~.,data=Dig_train,cutoffPermutations=4,splits=3,balance=4,featureFreq = 10)
+Dig_train$Class <- (1+Dig_train$class)/2 
+mcfs(formula=Class~.,data=Dig_train, cutoffPermutations = 0)
+glm(class~., Dig_train, family = 'binomial')
+
+mcfs(Class~., as.data.frame(Dig_train), cutoffPermutations = 3, featureFreq = 50,
+     buildID = TRUE, finalCV = FALSE, finalRuleset = FALSE, 
+     threadsNumber = 2)
+
+
 Dig_train$class
 
 #bez standaryzacji danych 
