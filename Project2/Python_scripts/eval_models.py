@@ -7,6 +7,8 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def get_data(remove_constant=True):
     X_artificial = pd.read_csv("../data/artificial/artificial_train.data", header=None, delim_whitespace=True)
@@ -55,9 +57,13 @@ def standarize(X_train,X_test):
     X_test_sc=pd.DataFrame(ss.transform(X_test), index=X_test.index, columns=X_test.columns)
     return X_train_sc,X_test_sc
 
-def delete_corr(X,thresh=0.98):
+def delete_corr(X,thresh=0.98,verbose=False):
         X=X.copy()
         cor_matrix = X.corr().abs()
+        if verbose:
+            plt.figure(figsize=(12,12))
+            sns.heatmap(cor_matrix,vmin=0.5,vmax=1)
+            plt.show()
         upper_tri = cor_matrix.where(np.triu(np.ones(cor_matrix.shape),k=1).astype(bool))
         to_drop = [column for column in upper_tri.columns if any(upper_tri[column] >= thresh)]
         X_cleaned=X.drop(columns=to_drop)
