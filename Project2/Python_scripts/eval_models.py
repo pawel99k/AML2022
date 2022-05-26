@@ -4,8 +4,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
-
+import numpy as np
 
 def get_data(remove_constant=True):
     X_artificial = pd.read_csv("../data/artificial/artificial_train.data", header=None, delim_whitespace=True)
@@ -48,3 +49,16 @@ def get_models_ba(X_train, X_test, y_train, y_test,logistic_args={},RF_args={},A
             print(names[-1], round(BA_scores[-1],4))
 
     return pd.DataFrame(data={"Classifier": names, "BA score": BA_scores})
+def standarize(X_train,X_test):
+    ss=StandardScaler()
+    X_train_sc=pd.DataFrame(ss.fit_transform(X_train), index=X_train.index,columns=X_train.columns)
+    X_test_sc=pd.DataFrame(ss.transform(X_test), index=X_test.index, columns=X_test.columns)
+    return X_train_sc,X_test_sc
+
+def delete_corr(X,thresh=0.98):
+        X=X.copy()
+        cor_matrix = X.corr().abs()
+        upper_tri = cor_matrix.where(np.triu(np.ones(cor_matrix.shape),k=1).astype(bool))
+        to_drop = [column for column in upper_tri.columns if any(upper_tri[column] >= thresh)]
+        X_cleaned=X.drop(columns=to_drop)
+        return X_cleaned
