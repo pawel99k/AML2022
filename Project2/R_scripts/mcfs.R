@@ -55,17 +55,8 @@ trainIndex_dig <- createDataPartition(Y_dig$class,p=0.75,list = FALSE)
 Dig_train <- tibble(X_dig[trainIndex_dig,],Y_dig[trainIndex_dig,])
 Dig_test <- tibble(X_dig[-trainIndex_dig,],Y_dig[-trainIndex_dig,])
 }
-Art_mcfs <- mcfs(formula=class~.,data=Dig_train,cutoffPermutations=4,splits=3,balance=4,featureFreq = 10)
-Dig_train$Class <- (1+Dig_train$class)/2 
-mcfs(formula=Class~.,data=Dig_train, cutoffPermutations = 0)
-glm(class~., Dig_train, family = 'binomial')
+Art_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),cutoffPermutations=4,splits=3,balance=4,featureFreq = 10)
 
-mcfs(Class~., as.data.frame(Dig_train), cutoffPermutations = 3, featureFreq = 50,
-     buildID = TRUE, finalCV = FALSE, finalRuleset = FALSE, 
-     threadsNumber = 2)
-
-
-Dig_train$class
 
 #bez standaryzacji danych 
 View(listLearners(obj="classif"))
