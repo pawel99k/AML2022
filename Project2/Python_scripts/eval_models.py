@@ -20,6 +20,8 @@ def get_data(remove_constant=True):
         VT_dig = VarianceThreshold(threshold=0)
         VT_dig.fit(X_digits)
         X_digits = X_digits.iloc[:, VT_dig.get_support(indices=True).tolist()]
+        
+        
 
     y_artificial = ((y_artificial + 1) / 2).to_numpy().ravel()
     y_digits = ((y_digits + 1) / 2).to_numpy().ravel()
@@ -27,7 +29,7 @@ def get_data(remove_constant=True):
     return X_artificial, y_artificial, X_digits, y_digits
 
 
-def get_models_ba(X_train, X_test, y_train, y_test, verbose=True):
+def get_models_ba(X_train, X_test, y_train, y_test,logistic_args={},RF_args={},AdaBoost_args={},LGBM_args={},XDB_args={}, verbose=True):
     # TODO dodać jakiś argument/argumenty pozwalające na dobieranie hiperparametrów modeli
     # najprościej chyba będzie to zrobić przy pomocy słowników
 
@@ -35,7 +37,7 @@ def get_models_ba(X_train, X_test, y_train, y_test, verbose=True):
     X_test = X_test.copy()
     X_test = X_test.loc[:, X_train.columns]
 
-    models = (LogisticRegression(), RandomForestClassifier(), AdaBoostClassifier(), LGBMClassifier(), XGBClassifier())
+    models = (LogisticRegression(**logistic_args), RandomForestClassifier(**RF_args), AdaBoostClassifier(**AdaBoost_args), LGBMClassifier(**LGBM_args), XGBClassifier(**XDB_args))
     names = []
     BA_scores = []
     for model in models:
@@ -43,6 +45,6 @@ def get_models_ba(X_train, X_test, y_train, y_test, verbose=True):
         model.fit(X_train, y_train)
         BA_scores.append(balanced_accuracy_score(y_true=y_test, y_pred=model.predict(X_test)))
         if verbose:
-            print(names[-1], BA_scores[-1])
+            print(names[-1], round(BA_scores[-1],4))
 
     return pd.DataFrame(data={"Classifier": names, "BA score": BA_scores})
