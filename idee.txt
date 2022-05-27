@@ -1,6 +1,6 @@
 anova
-mcfs (to pewnie ja)
-Boruta
+mcfs (to pewnie ja) prawie DONE
+Boruta DONE
 Lasso
 klasyczny RF
 chi square tests
