@@ -1,8 +1,15 @@
 *.ipynb_checkpoints
 
+
 # aby był widoczny folder na pliki
 # ale aby GitHub nie ?trzymał? samych plików
-Project2/data/*/*
-.Rproj.user
+Project2/data/artificial/*
+Project2/data/digits/*
+Project2/data/example_submission/*
 
+.Rproj.user
 Project2/R_scripts/.Rhistory
+
+Project2/Python_scripts/.idea/*
+Project2/Python_scripts/__pycache__/
+
