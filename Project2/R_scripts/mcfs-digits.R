@@ -42,6 +42,6 @@ library(rmcfs)
 }
 Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode = 2,featureFreq=75,threadsNumber=3)
 {
-  fwrite(list(colnames(Art_mcfs$data)), file =  str_c(path_to_data,"/mcfs/digits-features.csv"),eol=",",append=TRUE)
+  fwrite(list(colnames(Dig_mcfs$data)), file =  str_c(path_to_data,"/mcfs/digits-features.csv"),eol=",",append=TRUE)
   fwrite(list(" "), file =  str_c(path_to_data,"/mcfs/digits-features.csv"),eol="\n",append=TRUE)
 }
