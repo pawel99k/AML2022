@@ -31,6 +31,23 @@ def get_data(remove_constant=True):
 
     return X_artificial, y_artificial, X_digits, y_digits
 
+def get_train_test(set_name):
+    if set_name=="artificial":
+        path="../data/artificial/"
+    elif set_name=="digits":
+        path="../data/digits/"
+    else:
+        print("sth went wrong")
+        return
+    
+    X_train = pd.read_csv(path+"X_train.csv",index_col=0)
+    X_train.columns= X_train.columns.astype(np.int64)
+    X_test = pd.read_csv(path+"X_test.csv",index_col=0)
+    X_test.columns= X_test.columns.astype(np.int64)
+    y_train= np.genfromtxt(path+"y_train.csv")
+    y_test =np.genfromtxt(path+"y_test.csv")
+    return X_train,X_test,y_train,y_test
+
 
 def get_models_ba(X_train, X_test, y_train, y_test, n_estimators=150, max_iter=1000, logistic_args={}, RF_args={},
                   AdaBoost_args={}, LGBM_args={}, XDB_args={}, verbose=True):
@@ -84,7 +101,7 @@ def delete_multicollinear(X_train, vif_thresh=10):
     cols_dropped = []
     while True:
         variables = X_train.columns
-        vif = [variance_inflation_factor(X_train[variables].values, X.columns.get_loc(var)) for var in X.columns]
+        vif = [variance_inflation_factor(X_train[variables].values, X_train.columns.get_loc(var)) for var in X_train.columns]
         max_vif = max(vif)
         if max_vif > vif_thresh:
             maxloc = vif.index(max_vif)
@@ -94,4 +111,5 @@ def delete_multicollinear(X_train, vif_thresh=10):
             cols_dropped.append(col_drop)
         else:
             break
-        return X_train
+    print(X_train.shape[1], "features left")
+    return X_train
