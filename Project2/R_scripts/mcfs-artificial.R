@@ -4,43 +4,43 @@ library(stringr)
 library(HiClimR)
 library(tidyr)
 library(randomForest)
-library(mlr)
 library(caret)
 library(rmcfs)
 
 ### Loading the datasets
 {
-path_to_data <- "../data"
-
-read_file <- function(dataset_name,data=TRUE,train=TRUE) {
-  path <- str_c(path_to_data,dataset_name,sep="/")
-  if(train){ 
-    path <- str_c(path,"/",dataset_name,"_train")
-    
-    if(data) path <- str_c(path,".data")
-    else path <- str_c(path,".labels")
+get_file <- function(dataset_name,train=TRUE,get_X=TRUE) {
+  path <- str_c("../data",dataset_name,sep="/")
+  if(train){
+    if(get_X){
+      path <- str_c(path,"/X_train.csv") 
+    }
+    else{
+      path <- str_c(path,"/y_train.csv")
+    }
   }
-  else path <- str_c(path,"/",dataset_name,"_valid.data")
-  
-  fread(path)
+  else{
+    if(get_X){
+      path <- str_c(path,"/X_test.csv") 
+    }
+    else{
+      path <- str_c(path,"/y_test.csv")
+    }
+  }
+  if(get_X){
+  return <- fread(path,header=TRUE,data.table=TRUE)
+  }
+  else{
+  return <-fread(path,data.table=TRUE)
+  }
 }
 
-X_art=read_file("artificial")
-Y_art=read_file("artificial",data = FALSE)
-colnames(Y_art) <- c("class")
-}
-### removing constant variables (option to remove also almost constant)
-{
-  #change perc if you want to remove also almost constant
-X_art <- removeConstantFeatures(data.frame(X_art),perc=0)
-}
-##### Train-test division
-{
-trainIndex_art <- createDataPartition(Y_art$class,p=0.75,list = FALSE)
-  X_train <- X_art[trainIndex_art,]
-  X_test <- X_art[-trainIndex_art,]
-  Y_train <- Y_art[trainIndex_art]
-  Y_test <- Y_art[-trainIndex_art]
+X_train <- get_file("artificial")[,V1:=NULL]
+Y_train <- get_file("artificial",get_X = FALSE)
+X_test <- get_file("artificial",train = FALSE)[,V1:=NULL]
+Y_test <- get_file("artificial",train = FALSE,get_X = FALSE)
+colnames(Y_train) <- c("class")
+colnames(Y_test) <- c("class")
 }
 #### Standarization
 {
@@ -55,6 +55,6 @@ trainIndex_art <- createDataPartition(Y_art$class,p=0.75,list = FALSE)
 }
 Art_mcfs <- mcfs(formula=class~.,data=Art_train,mode = 2,featureFreq=75,threadsNumber=3)
 {
-fwrite(list(colnames(Art_mcfs$data)), file =  str_c(path_to_data,"/mcfs/artificial-features.csv"),eol=",",append=TRUE)
-fwrite(list(" "), file =  str_c(path_to_data,"/mcfs/artificial-features.csv"),eol="\n",append=TRUE)
+fwrite(list(colnames(Art_mcfs$data)), file =  "../data/mcfs/artificial-features.csv",eol=",",append=TRUE)
+fwrite(list(" "), file =  "../data/mcfs/artificial-features.csv",eol="\n",append=TRUE)
 }
