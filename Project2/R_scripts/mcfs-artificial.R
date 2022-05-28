@@ -50,8 +50,8 @@ colnames(Y_test) <- c("class")
 }
 ###all into 1 dataframe (after standarization)
 {
-  Art_train <- data.frame(X_train_sc,Y_train)
-  Art_test <- data.frame(X_test_sc,Y_test)
+  Art_train <- data.frame(X_train_sc,Y_train,check.names=FALSE,fix.empty.names=FALSE)
+  Art_test <- data.frame(X_test_sc,Y_test,check.names=FALSE,fix.empty.names=FALSE)
 }
 Art_mcfs <- mcfs(formula=class~.,data=Art_train,mode = 2,featureFreq=75,threadsNumber=3)
 {

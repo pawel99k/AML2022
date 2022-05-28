@@ -10,38 +10,52 @@ library(rmcfs)
 
 ### Loading the datasets
 {
-  path_to_data <- "../data"
-  
-  read_file <- function(dataset_name,data=TRUE,train=TRUE) {
-    path <- str_c(path_to_data,dataset_name,sep="/")
-    if(train){ 
-      path <- str_c(path,"/",dataset_name,"_train")
-      
-      if(data) path <- str_c(path,".data")
-      else path <- str_c(path,".labels")
+  get_file <- function(dataset_name,train=TRUE,get_X=TRUE) {
+    path <- str_c("../data",dataset_name,sep="/")
+    if(train){
+      if(get_X){
+        path <- str_c(path,"/X_train.csv") 
+      }
+      else{
+        path <- str_c(path,"/y_train.csv")
+      }
     }
-    else path <- str_c(path,"/",dataset_name,"_valid.data")
-    
-    fread(path)
+    else{
+      if(get_X){
+        path <- str_c(path,"/X_test.csv") 
+      }
+      else{
+        path <- str_c(path,"/y_test.csv")
+      }
+    }
+    if(get_X){
+      return <- fread(path,header=TRUE,data.table=TRUE)
+    }
+    else{
+      return <-fread(path,data.table=TRUE)
+    }
   }
   
-  X_dig=read_file("digits")
-  Y_dig=read_file("digits",data=FALSE)
-  colnames(Y_dig) <- c("class")
+  X_train <- get_file("digits")[,V1:=NULL]
+  Y_train <- get_file("digits",get_X = FALSE)
+  X_test <- get_file("digits",train = FALSE)[,V1:=NULL]
+  Y_test <- get_file("digits",train = FALSE,get_X = FALSE)
+  colnames(Y_train) <- c("class")
+  colnames(Y_test) <- c("class")
 }
-
-### removing constant variables (option to remove also almost constant)
+#### Standarization
 {
-  X_dig <- removeConstantFeatures(data.frame(X_dig),perc=0)
+  X_train_sc <- scale(X_train)
+  X_test_sc <- scale(X_test, center=attr(X_train_sc, "scaled:center"), 
+                     scale=attr(X_train_sc, "scaled:scale"))
 }
-##### Train-test division
+###all into 1 dataframe (after standarization)
 {
-  trainIndex_dig <- createDataPartition(Y_dig$class,p=0.75,list = FALSE)
-  Dig_train <- tibble(X_dig[trainIndex_dig,],Y_dig[trainIndex_dig,])
-  Dig_test <- tibble(X_dig[-trainIndex_dig,],Y_dig[-trainIndex_dig,])
+  Dig_train <- data.frame(X_train_sc,Y_train,check.names=FALSE,fix.empty.names=FALSE)
+  Dig_test <- data.frame(X_test_sc,Y_test,check.names=FALSE,fix.empty.names=FALSE)
 }
 Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode = 2,featureFreq=75,threadsNumber=3)
 {
-  fwrite(list(colnames(Dig_mcfs$data)), file =  str_c(path_to_data,"/mcfs/digits-features.csv"),eol=",",append=TRUE)
-  fwrite(list(" "), file =  str_c(path_to_data,"/mcfs/digits-features.csv"),eol="\n",append=TRUE)
+  fwrite(list(colnames(Dig_mcfs$data)), file =  "../data/mcfs/digits-features.csv",eol=",",append=TRUE)
+  fwrite(list(" "), file =  "../data/mcfs/digits-features.csv",eol="\n",append=TRUE)
 }
