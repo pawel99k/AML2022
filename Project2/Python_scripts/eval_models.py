@@ -3,11 +3,14 @@ from lightgbm import LGBMClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.metrics import balanced_accuracy_score
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import mutual_info_classif, SelectKBest, SelectFromModel
+from sklearn.feature_selection import VarianceThreshold, chi2, f_classif
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.model_selection import GridSearchCV
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 import pandas as pd
 import numpy as np
+import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -111,5 +114,95 @@ def delete_multicollinear(X_train, vif_thresh=10):
             cols_dropped.append(col_drop)
         else:
             break
+        print(X_train.shape[1])
     print(X_train.shape[1], "features left")
     return X_train
+
+def test_univariates(X_train, y_train, X_test, y_test, k=5):
+    result = pd.DataFrame(columns=['Classifier', 'BA score', 'Data normalization', 'method', 'k', 'variables'])
+    for is_scaled in [False, True]:
+        if is_scaled:
+            mm = MinMaxScaler()
+            X_train = mm.fit_transform(X_train)
+            X_test = mm.transform(X_test)
+        for method in [chi2, f_classif, mutual_info_classif]:
+            kbest = SelectKBest(method, k=k)
+            kbest = SelectKBest(method, k=k)
+            kbest.fit(X_train, y_train)
+            variables = np.arange(0, len(kbest.get_support()))[kbest.get_support()]
+            X_train_selected = pd.DataFrame(kbest.transform(X_train), columns=variables)
+            X_test_selected = pd.DataFrame(kbest.transform(X_test), columns=variables)
+            res = get_models_ba(X_train_selected,
+                                X_test_selected,
+                                y_train,
+                                y_test,
+                                verbose=False
+                               )
+            res['Data normalization'] = is_scaled
+            res['method'] = method.__name__
+            res['k'] = k
+            res['variables'] = json.dumps(variables.tolist())
+            result = pd.concat((result, res), ignore_index=True)
+            print(f'Scaled {is_scaled}, method {method.__name__}, {len(variables)} variables\n{res}')
+    return result
+
+def drop_constants(df, df2):
+    to_drop = df.columns[df.var()==0]
+    return df.drop(to_drop, axis=1), df2.drop(to_drop, axis=1) 
+
+
+def get_models_ba_with_hyperparameters_tuning(X_train, X_test, y_train, y_test, logistic_args={}, RF_args={},
+                                              AdaBoost_args={}, LGBM_args={}, XDB_args={}, verbose=True):
+
+    X_test = X_test.copy()
+    X_test = X_test.loc[:, X_train.columns]
+    
+    models = (LogisticRegression(),
+              RandomForestClassifier(),
+              AdaBoostClassifier(),
+              LGBMClassifier(),
+              XGBClassifier())
+    names = []
+    valid_accuracy_score = []
+    best_params = []
+    BA_scores = []
+    
+    for model, model_param_grid in zip(models, [logistic_args, RF_args, AdaBoost_args, LGBM_args, XDB_args]):
+        gscv = GridSearchCV(model, param_grid=model_param_grid, verbose=verbose)
+        gscv.fit(X_train, y_train)
+        valid_accuracy_score.append(gscv.cv_results_['mean_test_score'].max())
+        BA_scores.append(balanced_accuracy_score(y_test, gscv.best_estimator_.predict(X_test)))
+        best_params.append(gscv.best_params_)
+        names.append(model.__class__.__name__)
+        if verbose:
+            print(names[-1], 'Valid:', round(valid_accuracy_score[-1], 4), 'Test:', round(BA_scores[-1], 4))
+    if verbose:
+        print(len(X_test.columns), " features in the dataset")
+
+    return pd.DataFrame(data={"Classifier": names, "best params": best_params,
+                              "Valid score": valid_accuracy_score, "BA score": BA_scores})
+
+def estimator_wrappers(X_train, X_test, y_train, y_test, k=50):
+    rf = RandomForestClassifier(max_depth=5)
+    ab = AdaBoostClassifier()
+    lr = LogisticRegression(penalty='l1', solver='liblinear')
+    
+    results = pd.DataFrame(columns=['Classifier', 'BA score', 'Wrapper'])
+    
+    for pre_model in [rf, ab, lr]:
+        sfm = SelectFromModel(pre_model, max_features=k)
+        sfm.fit(X_train, y_train)
+        variables = np.arange(0, len(X_train.columns))[sfm.get_support()]
+        X_train_sfm = pd.DataFrame(sfm.transform(X_train), columns=variables)
+        X_test_sfm = pd.DataFrame(sfm.transform(X_test), columns=variables)
+        
+        res = get_models_ba(
+                X_train_sfm,
+                X_test_sfm,
+                y_train,
+                y_test,
+                verbose=False
+        )
+        res['Wrapper'] = pre_model.__class__.__name__
+        results = pd.concat((results, res), ignore_index=True)
+    return results

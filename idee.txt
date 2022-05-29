@@ -1,9 +1,9 @@
-anova
+anova DONE
 mcfs (to pewnie ja) prawie DONE
 Boruta DONE
 Lasso
 klasyczny RF
-chi square tests
+chi square tests DONE
 
 coś ewentualnie z radzeniem sobie gdy zmienne są w jakiś sposób powiązane
 (np na początku
