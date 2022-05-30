@@ -3,15 +3,12 @@ library(data.table)
 library(stringr)
 library(HiClimR)
 library(tidyr)
-library(randomForest)
-library(mlr)
-library(caret)
 library(rmcfs)
 
 ### Loading the datasets
 {
   get_file <- function(dataset_name,train=TRUE,get_X=TRUE) {
-    path <- str_c("../data",dataset_name,sep="/")
+    path <- str_c("C:/Users/Szymon/Jupyter/AML/Projects/AML2022/Project2/data",dataset_name,sep="/")
     if(train){
       if(get_X){
         path <- str_c(path,"/X_train.csv") 
@@ -42,8 +39,10 @@ library(rmcfs)
   Y_test <- get_file("digits",train = FALSE,get_X = FALSE)
   colnames(Y_train) <- c("class")
   colnames(Y_test) <- c("class")
+  Y_test$class <- as.factor( Y_test$class)
+  Y_train$class <- as.factor( Y_train$class)
 }
-#### Standarization
+
 {
   X_train_sc <- scale(X_train)
   X_test_sc <- scale(X_test, center=attr(X_train_sc, "scaled:center"), 
@@ -54,8 +53,8 @@ library(rmcfs)
   Dig_train <- data.frame(X_train_sc,Y_train,check.names=FALSE,fix.empty.names=FALSE)
   Dig_test <- data.frame(X_test_sc,Y_test,check.names=FALSE,fix.empty.names=FALSE)
 }
-Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode = 2,featureFreq=75,threadsNumber=3)
+Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode=2,cutoffMethod='criticalAngle',finalCV=FALSE,threadsNumber=2)
 {
-  fwrite(list(colnames(Dig_mcfs$data)), file =  "../data/mcfs/digits-features.csv",eol=",",append=TRUE)
-  fwrite(list(" "), file =  "../data/mcfs/digits-features.csv",eol="\n",append=TRUE)
+  fwrite(list(head(colnames(Dig_mcfs$data), -1)), file="C:/Users/Szymon/Jupyter/AML/Projects/AML2022/Project2/data/mcfs/digits-features-fact-kmeans.csv",eol=",",append=TRUE)
+  fwrite(list(" "), file ="../data/mcfs/digits-features-fact-cangle.csv",eol="\n")#,append=TRUE)
 }
