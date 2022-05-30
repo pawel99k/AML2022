@@ -8,7 +8,7 @@ library(rmcfs)
 ### Loading the datasets
 {
   get_file <- function(dataset_name,train=TRUE,get_X=TRUE) {
-    path <- str_c("C:/Users/Szymon/Jupyter/AML/Projects/AML2022/Project2/data",dataset_name,sep="/")
+    path <- str_c("../data",dataset_name,sep="/")
     if(train){
       if(get_X){
         path <- str_c(path,"/X_train.csv") 
@@ -55,6 +55,6 @@ library(rmcfs)
 }
 Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode=2,cutoffMethod='criticalAngle',finalCV=FALSE,threadsNumber=2)
 {
-  fwrite(list(head(colnames(Dig_mcfs$data), -1)), file="C:/Users/Szymon/Jupyter/AML/Projects/AML2022/Project2/data/mcfs/digits-features-fact-kmeans.csv",eol=",",append=TRUE)
+  fwrite(list(head(colnames(Dig_mcfs$data), -1)), file="../data/mcfs/digits-features-fact-kmeans.csv",eol=",",append=TRUE)
   fwrite(list(" "), file ="../data/mcfs/digits-features-fact-cangle.csv",eol="\n")#,append=TRUE)
 }
