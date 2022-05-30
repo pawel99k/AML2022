@@ -56,5 +56,5 @@ library(rmcfs)
 Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode=2,cutoffMethod='criticalAngle',finalCV=FALSE,threadsNumber=2)
 {
   fwrite(list(head(colnames(Dig_mcfs$data), -1)), file="../data/mcfs/digits-features-fact-kmeans.csv",eol=",",append=TRUE)
-  fwrite(list(" "), file ="../data/mcfs/digits-features-fact-cangle.csv",eol="\n")#,append=TRUE)
+  fwrite(list(" "), file ="../data/mcfs/digits-features-fact-cangle.csv",eol="\n",append=TRUE)
 }
