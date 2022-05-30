@@ -54,8 +54,11 @@ library(rmcfs)
   Dig_train <- data.frame(X_train_sc,Y_train,check.names=FALSE,fix.empty.names=FALSE)
   Dig_test <- data.frame(X_test_sc,Y_test,check.names=FALSE,fix.empty.names=FALSE)
 }
-Dig_mcfs <- mcfs(formula=class~.,data=as.data.frame(Dig_train),mode = 2,featureFreq=75,threadsNumber=3)
+Dig_train <- data.frame(Dig_train)
+Dig_train$class <- as.factor(Dig_train$class)
+
+Dig_mcfs <- mcfs(formula=class~.,data=Dig_train,mode = 2,featureFreq=75,threadsNumber=3)
 {
-  fwrite(list(colnames(Dig_mcfs$data)), file =  "../data/mcfs/digits-features.csv",eol=",",append=TRUE)
-  fwrite(list(" "), file =  "../data/mcfs/digits-features.csv",eol="\n",append=TRUE)
+  fwrite(list(colnames(Dig_mcfs$data)), file =  "../data/mcfs/digits-features-factor.csv",eol=",",append=TRUE)
+  fwrite(list(" "), file =  "../data/mcfs/digits-features-factor.csv",eol="\n",append=TRUE)
 }
