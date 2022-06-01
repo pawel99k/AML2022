@@ -6,11 +6,12 @@ from sklearn.metrics import balanced_accuracy_score
 from sklearn.feature_selection import mutual_info_classif, SelectKBest, SelectFromModel
 from sklearn.feature_selection import VarianceThreshold, chi2, f_classif
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, KFold
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 import pandas as pd
 import numpy as np
 import json
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -40,7 +41,7 @@ def get_train_test(set_name):
     elif set_name=="digits":
         path="../data/digits/"
     else:
-        print("sth went wrong")
+        raise ValueError()
         return
     
     X_train = pd.read_csv(path+"X_train.csv",index_col=0)
@@ -57,8 +58,7 @@ def get_models_ba(X_train, X_test, y_train, y_test, n_estimators=150, max_iter=1
 
     # to o czym rozmawialiśmy
     X_test = X_test.copy()
-    X_test = X_test.loc[:, X_train.columns]
-
+    X_test = X_test.loc[:, X_train.columns]    
     models = (LogisticRegression(max_iter=max_iter, **logistic_args),
               RandomForestClassifier(n_estimators=n_estimators, **RF_args),
               AdaBoostClassifier(n_estimators=n_estimators, **AdaBoost_args),
@@ -146,6 +146,44 @@ def test_univariates(X_train, y_train, X_test, y_test, k=5):
             print(f'Scaled {is_scaled}, method {method.__name__}, {len(variables)} variables\n{res}')
     return result
 
+def test_univariates_cv(X_train, y_train, k=5, folds=5):
+    result = pd.DataFrame(columns=['Classifier', 'BA valid score', 'Data normalization', 'method', 'k', 'variables', 'fold'])
+    for is_scaled in tqdm([False, True], desc='Normalization'):
+        for method in [chi2, f_classif, mutual_info_classif]:
+            kfold = KFold(n_splits=folds)
+            for i, (train_idx, val_idx) in enumerate(tqdm(kfold.split(X_train), desc='CV')):
+                X_train_fold = X_train.iloc[train_idx,:]
+                X_val_fold = X_train.iloc[val_idx,:]
+                y_train_fold = y_train[train_idx]
+                y_val_fold = y_train[val_idx]
+                if is_scaled:
+                    mm = MinMaxScaler()
+                    X_train_fold = mm.fit_transform(X_train_fold)
+                    X_val_fold = mm.transform(X_val_fold)
+                kbest = SelectKBest(method, k=k)
+                kbest.fit(X_train_fold, y_train_fold)
+        
+                variables = np.arange(0, len(kbest.get_support()))[kbest.get_support()]
+            
+                X_train_selected = pd.DataFrame(kbest.transform(X_train_fold), columns=variables)
+                X_valid_selected = pd.DataFrame(kbest.transform(X_val_fold), columns=variables)
+                res = get_models_ba(X_train_selected,
+                                    X_valid_selected,
+                                    y_train_fold,
+                                    y_val_fold,
+                                    verbose=False
+                                   )
+                res = res.rename(columns={'BA score': 'BA valid score'})
+                res['Data normalization'] = is_scaled
+                res['method'] = method.__name__
+                res['k'] = k
+                res['fold'] = i
+                res['variables'] = json.dumps(variables.tolist())
+                result = pd.concat((result, res), ignore_index=True)
+    return result
+
+
+
 def drop_constants(df, df2):
     to_drop = df.columns[df.var()==0]
     return df.drop(to_drop, axis=1), df2.drop(to_drop, axis=1) 
@@ -205,4 +243,39 @@ def estimator_wrappers(X_train, X_test, y_train, y_test, k=50):
         )
         res['Wrapper'] = pre_model.__class__.__name__
         results = pd.concat((results, res), ignore_index=True)
+    return results
+
+def estimator_wrappers_cv(X_train, y_train, k=50, folds=5):
+    rf = RandomForestClassifier(max_depth=5)
+    ab = AdaBoostClassifier()
+    lr = LogisticRegression(penalty='l1', solver='liblinear')
+    
+    results = pd.DataFrame(columns=['Classifier', 'BA valid score', 'Wrapper', 'fold', 'is_scaled', 'k'])
+    
+    for is_scaled in tqdm([False, True], desc='Scaling'):
+        for pre_model in tqdm([rf, ab, lr], desc='Wrappers'):
+            sfm = SelectFromModel(pre_model, max_features=k)
+            kfold = KFold(n_splits=folds)
+            for i, (train_idx, val_idx) in enumerate(tqdm(kfold.split(X_train), desc='CV')):
+                X_train_fold = X_train.iloc[train_idx,:]
+                X_val_fold = X_train.iloc[val_idx,:]
+                y_train_fold = y_train[train_idx]
+                y_val_fold = y_train[val_idx]
+                sfm.fit(X_train, y_train)
+                variables = np.arange(0, len(X_train.columns))[sfm.get_support()]
+                X_train_fold_sfm = pd.DataFrame(sfm.transform(X_train_fold), columns=variables)
+                X_val_fold_sfm = pd.DataFrame(sfm.transform(X_val_fold), columns=variables)
+                res = get_models_ba(
+                        X_train_fold_sfm,
+                        X_val_fold_sfm,
+                        y_train_fold,
+                        y_val_fold,
+                        verbose=False
+                )
+                res = res.rename(columns={'BA score': 'BA valid score'})
+                res['k'] = len(variables) 
+                res['fold'] = i
+                res['is_scaled'] = is_scaled
+                res['Wrapper'] = pre_model.__class__.__name__
+                results = pd.concat((results, res), ignore_index=True)
     return results
